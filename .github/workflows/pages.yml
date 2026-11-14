@@ -3,7 +3,7 @@ name: Webversie publiceren (GitHub Pages)
 on:
   push:
     branches: [main]
-    paths: ["docs/**"]
+    paths: ["docs/**", ".github/workflows/pages.yml"]
   # Commits van de weekrapport-workflow starten geen push-workflow,
   # dus publiceer ook na elke afgeronde weekrapport-run.
   workflow_run:
