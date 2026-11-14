@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hardloop-weekrapport</title>
+<meta name="theme-color" content="#1f6f5c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root { --bg:#f6f7f5; --panel:#fff; --fg:#1d2320; --muted:#5f6b66; --line:#dde3df; --accent:#1f6f5c; --accent2:#c98a2b; --ok:#2e7d32; --warn:#b26a00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141816; --panel:#1d2320; --fg:#e8ece9; --muted:#9aa7a1; --line:#2f3833; --accent:#4fb39a; --accent2:#e0a84e; --ok:#66bb6a; --warn:#ffb74d; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:20px 16px 48px; display:flex; flex-direction:column; gap:22px; }
+  h1 { font-size:1.7rem; font-weight:600; margin:0; }
+  h2 { font-size:1.1rem; margin:0 0 6px; }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .lead { margin:0; }
+  .ok { color:var(--ok); } .warn { color:var(--warn); }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .card h3 { margin:0; font-size:.8rem; font-weight:500; color:var(--muted); }
+  .big { font-size:1.7rem; font-variant-numeric:tabular-nums; }
+  .chart { position:relative; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px; }
+  .chart svg { display:block; width:100%; height:auto; }
+  .chart text { font-size:11px; fill:var(--muted); }
+  .tip { position:absolute; pointer-events:none; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 8px; font-size:.8rem; box-shadow:0 2px 8px rgba(0,0,0,.15); white-space:nowrap; }
+  .tablewrap { overflow-x:auto; background:var(--panel); border:1px solid var(--line); border-radius:10px; }
+  table { border-collapse:collapse; width:100%; font-size:.85rem; font-variant-numeric:tabular-nums; }
+  th, td { padding:6px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th:first-child, td:first-child { text-align:left; }
+  th { color:var(--muted); font-weight:500; }
+  details { font-size:.85rem; color:var(--muted); }
+  .err { background:var(--panel); border:1px solid var(--warn); border-radius:10px; padding:12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Hardloop-weekrapport</h1>
+    <div class="muted" id="gegenereerd">Laden…</div>
+  </header>
+  <p class="lead" id="samenvatting"></p>
+
+  <section class="cards">
+    <div class="card"><h3>Deze week (ma–zo)</h3><div class="big" id="k-week">—</div><div class="muted" id="k-week-sub"></div></div>
+    <div class="card"><h3>Gemiddeld per week (4 volledige weken)</h3><div class="big" id="k-gem">—</div><div class="muted" id="k-doel"></div></div>
+    <div class="card"><h3>Regelmaat (8 volledige weken)</h3><div class="big" id="k-regel">—</div><div class="muted" id="k-reeks"></div></div>
+    <div class="card"><h3>Voorspelde 5 km / 10 km</h3><div class="big" id="k-5k">—</div><div class="muted" id="k-10k"></div></div>
+  </section>
+
+  <section>
+    <h2>Kilometers per week</h2>
+    <div class="muted">Laatste 12 weken. Stippellijn = weekdoel.</div>
+    <div class="chart" id="chart-weken"></div>
+  </section>
+
+  <section>
+    <h2>Tempo per loop</h2>
+    <div class="muted">Hoger = sneller. Bewegend tempo en tempo inclusief stops (totale tijd ÷ afstand).</div>
+    <div class="chart" id="chart-tempo"></div>
+  </section>
+
+  <section>
+    <h2>Alle lopen</h2>
+    <div class="tablewrap"><table>
+      <thead><tr id="kop"><th>Datum</th><th>Afstand (km)</th><th>Bewegend</th><th>Tempo /km</th><th>Incl. stops /km</th><th>Snelste 1 km</th></tr></thead>
+      <tbody id="tabel"></tbody>
+    </table></div>
+  </section>
+
+  <p id="advies"></p>
+
+  <details>
+    <summary>Toelichting en bronnen</summary>
+    <ul>
+      <li>Data: Strava API (activiteiten en best efforts), elke zondagavond bijgewerkt door een GitHub Actions-workflow.</li>
+      <li>Voorspelde tijden: eigen berekening met de formule van Riegel, T₂ = T₁ × (D₂/D₁)^1,06, uit de snelste mijl van de laatste 12 weken. Riegel, P.S. (1981), "Athletic records and human endurance", American Scientist 69(3): 285–290.</li>
+      <li>Voor 10 km is de voorspelling onzeker zolang je lopen korter zijn dan 5 km.</li>
+    </ul>
+  </details>
+</main>
+<script>
+const NL_MAAND = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+const km = v => v == null ? '—' : v.toFixed(1).replace('.', ',');
+const datum = iso => { const [y, m, d] = iso.split('-').map(Number); return d + ' ' + NL_MAAND[m - 1]; };
+const tijd = s => { s = Math.round(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const $ = id => document.getElementById(id);
+const SVG = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) { const e = document.createElementNS(SVG, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function txt(tag, attrs, text, parent) { const e = el(tag, attrs, parent); e.textContent = text; return e; }
+function tooltip(box) {
+  const t = document.createElement('div'); t.className = 'tip'; t.hidden = true; box.appendChild(t);
+  return { show(ev, lines) { t.textContent = ''; lines.forEach(l => { const d = document.createElement('div'); d.textContent = l; t.appendChild(d); });
+      t.hidden = false; const b = box.getBoundingClientRect(); let x = ev.clientX - b.left + 12; if (x + t.offsetWidth > b.width) x = ev.clientX - b.left - t.offsetWidth - 12;
+      t.style.left = Math.max(0, x) + 'px'; t.style.top = (ev.clientY - b.top - 10) + 'px'; },
+    hide() { t.hidden = true; } };
+}
+
+function tekenWeken(r) {
+  const box = $('chart-weken'); box.textContent = '';
+  const W = Math.max(300, box.clientWidth - 20), H = 220, ml = 34, mb = 26, mt = 14;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Kilometers per week' }, box);
+  const max = Math.max(r.doel_km_week * 1.2, ...r.weken.map(w => w.km));
+  const top = Math.ceil(max);
+  const y = v => H - mb - (v / top) * (H - mb - mt);
+  for (let v = 0; v <= top; v += Math.max(1, Math.round(top / 4))) {
+    el('line', { x1: ml, x2: W, y1: y(v), y2: y(v), stroke: 'var(--line)' }, svg);
+    txt('text', { x: ml - 6, y: y(v) + 4, 'text-anchor': 'end' }, String(v), svg);
+  }
+  const bw = (W - ml) / r.weken.length;
+  const tip = tooltip(box);
+  const stap = W < 480 ? 3 : W < 700 ? 2 : 1;
+  r.weken.forEach((w, i) => {
+    const x = ml + i * bw + bw * 0.15, h = y(0) - y(w.km);
+    const rect = el('rect', { x, y: y(w.km), width: bw * 0.7, height: Math.max(0, h), rx: 2, fill: w.km >= r.doel_km_week ? 'var(--ok)' : 'var(--accent)' }, svg);
+    rect.addEventListener('pointermove', ev => tip.show(ev, ['Week van ' + datum(w.week_start), km(w.km) + ' km', w.lopen + (w.lopen === 1 ? ' loop' : ' lopen')]));
+    rect.addEventListener('pointerleave', () => tip.hide());
+    if (w.km > 0 && bw > 26) txt('text', { x: x + bw * 0.35, y: y(w.km) - 4, 'text-anchor': 'middle' }, km(w.km), svg);
+    if ((r.weken.length - 1 - i) % stap === 0) txt('text', { x: x + bw * 0.35, y: H - 8, 'text-anchor': 'middle' }, datum(w.week_start), svg);
+  });
+  el('line', { x1: ml, x2: W, y1: y(r.doel_km_week), y2: y(r.doel_km_week), stroke: 'var(--accent2)', 'stroke-dasharray': '4 4' }, svg);
+}
+
+function tekenTempo(r) {
+  const box = $('chart-tempo'); box.textContent = '';
+  if (!r.lopen.length) { box.textContent = 'Nog geen lopen.'; return; }
+  const W = Math.max(300, box.clientWidth - 20), H = 220, ml = 40, mb = 26, mt = 26, mr = 16;
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Tempo per loop' }, box);
+  const vals = r.lopen.flatMap(l => [l.tempo_s, l.tempo_incl_s]);
+  const lo = Math.floor((Math.min(...vals) - 15) / 30) * 30, hi = Math.ceil((Math.max(...vals) + 15) / 30) * 30;
+  const y = v => mt + (v - lo) / (hi - lo) * (H - mb - mt);
+  for (let v = lo; v <= hi; v += Math.max(30, Math.round((hi - lo) / 4 / 30) * 30)) {
+    el('line', { x1: ml, x2: W - mr, y1: y(v), y2: y(v), stroke: 'var(--line)' }, svg);
+    txt('text', { x: ml - 6, y: y(v) + 4, 'text-anchor': 'end' }, tijd(v), svg);
+  }
+  const n = r.lopen.length, x = i => n === 1 ? (ml + W - mr) / 2 : ml + 14 + i * (W - mr - ml - 28) / (n - 1);
+  const tip = tooltip(box);
+  const reeksen = [['tempo_s', 'Bewegend', 'var(--accent)'], ['tempo_incl_s', 'Incl. stops', 'var(--accent2)']];
+  const stap = Math.max(1, Math.ceil(n / Math.floor(W / 70)));
+  r.lopen.forEach((l, i) => { if (i % stap === 0) txt('text', { x: x(i), y: H - 8, 'text-anchor': 'middle' }, datum(l.datum), svg); });
+  reeksen.forEach(([k, naam, kleur], j) => {
+    el('polyline', { points: r.lopen.map((l, i) => x(i) + ',' + y(l[k])).join(' '), fill: 'none', stroke: kleur, 'stroke-width': 2 }, svg);
+    r.lopen.forEach((l, i) => {
+      const c = el('circle', { cx: x(i), cy: y(l[k]), r: 5, fill: kleur }, svg);
+      c.addEventListener('pointermove', ev => tip.show(ev, [datum(l.datum) + ' · ' + km(l.afstand_km) + ' km', 'Bewegend: ' + l.tempo + ' /km', 'Incl. stops: ' + l.tempo_incl_stops + ' /km']));
+      c.addEventListener('pointerleave', () => tip.hide());
+    });
+    el('circle', { cx: ml + 6 + j * 110, cy: 10, r: 5, fill: kleur }, svg);
+    txt('text', { x: ml + 15 + j * 110, y: 14 }, naam, svg);
+  });
+}
+
+function vul(r) {
+  const d = r.deze_week;
+  $('gegenereerd').textContent = 'Bijgewerkt: ' + new Date(r.gegenereerd).toLocaleString('nl-NL', { dateStyle: 'long', timeStyle: 'short' });
+  const lead = $('samenvatting');
+  const status = !d.lopen ? ['warn', 'Nog geen loop deze week.'] : r.doel_afstand_gehaald ? ['ok', 'Weekdoel gehaald.'] : ['warn', 'Wel gelopen, maar afstandsdoel nog niet gehaald.'];
+  lead.textContent = `Deze week ${km(d.km)} km in ${d.lopen} ${d.lopen === 1 ? 'loop' : 'lopen'} (weekdoel ${km(r.doel_km_week)} km en minstens 1 loop). `;
+  const s = document.createElement('span'); s.className = status[0]; s.textContent = status[1]; lead.appendChild(s);
+  lead.append(` De laatste 4 volledige weken gemiddeld ${km(r.gem_km_4w)} km per week; ${r.weken_met_loop_8w} van de laatste 8 weken had minstens één loop.`);
+  $('k-week').textContent = km(d.km) + ' km';
+  $('k-week-sub').textContent = `${d.lopen} ${d.lopen === 1 ? 'loop' : 'lopen'} · vorige week ${km(r.vorige_week_km)} km`;
+  $('k-gem').textContent = km(r.gem_km_4w) + ' km';
+  $('k-doel').textContent = 'Weekdoel ' + km(r.doel_km_week) + ' km';
+  $('k-regel').textContent = r.weken_met_loop_8w + ' / 8 weken';
+  $('k-reeks').textContent = 'Huidige reeks: ' + r.reeks_weken + ' week/weken op rij';
+  if (r.voorspelling) { $('k-5k').textContent = r.voorspelling['5k']; $('k-10k').textContent = '10 km ± ' + r.voorspelling['10k'] + ' · ' + r.voorspelling.basis; }
+  const metHr = r.lopen.some(l => 'hartslag' in l);
+  if (metHr) { const th = document.createElement('th'); th.textContent = 'Gem. hartslag'; $('kop').appendChild(th); }
+  const tb = $('tabel'); tb.textContent = '';
+  r.lopen.slice().reverse().forEach(l => {
+    const tr = document.createElement('tr');
+    const cellen = [datum(l.datum) + ' ' + l.datum.slice(0, 4), l.afstand_km.toFixed(2).replace('.', ','), l.beweegtijd, l.tempo, l.tempo_incl_stops, l.snelste_1k || '—'];
+    if (metHr) cellen.push(l.hartslag == null ? '—' : String(l.hartslag));
+    cellen.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
+    tb.appendChild(tr);
+  });
+  $('advies').textContent = r.advies;
+  const teken = () => { tekenWeken(r); tekenTempo(r); };
+  teken();
+  let t; addEventListener('resize', () => { clearTimeout(t); t = setTimeout(teken, 150); });
+}
+
+fetch('data/report.json', { cache: 'no-store' })
+  .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+  .then(vul)
+  .catch(err => { const m = document.querySelector('main'); const d = document.createElement('div'); d.className = 'err'; d.textContent = 'Rapport kon niet geladen worden (' + err.message + ').'; m.insertBefore(d, m.children[1]); $('gegenereerd').textContent = ''; });
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

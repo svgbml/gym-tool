@@ -1,0 +1,61 @@
+name: Hardloop-weekrapport
+
+on:
+  schedule:
+    # Zondag 20:39 Nederlandse tijd. GitHub rekent in UTC, dus twee tijden
+    # (winter 19:39 UTC, zomer 18:39 UTC); het script slaat de verkeerde over.
+    - cron: "39 18 * * 0"
+    - cron: "39 19 * * 0"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Tijdcheck overslaan"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekrapport
+  cancel-in-progress: false
+
+jobs:
+  rapport:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installeer pakketten
+        run: pip install -r requirements.txt
+
+      - name: Maak weekrapport en stuur melding
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+          TOKEN_KEY: ${{ secrets.TOKEN_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          DOEL_KM_WEEK: ${{ vars.DOEL_KM_WEEK }}
+          PUBLISH_HEARTRATE: ${{ vars.PUBLISH_HEARTRATE }}
+          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          FORCE_RUN: ${{ inputs.force }}
+        run: python scripts/weekrapport.py
+
+      - name: Sla rapport en token op
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for f in docs/data/report.json state/strava_token.enc; do
+            [ -f "$f" ] && git add "$f"
+          done
+          if git diff --cached --quiet; then
+            echo "Geen wijzigingen."
+          else
+            git commit -m "Weekrapport $(TZ=Europe/Amsterdam date +%Y-%m-%d)"
+            git push
+          fi

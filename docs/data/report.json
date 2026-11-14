@@ -1,0 +1,120 @@
+{
+  "gegenereerd": "2026-11-14T16:23+01:00",
+  "week_start": "2026-11-09",
+  "doel_km_week": 5,
+  "deze_week": {
+    "km": 0.0,
+    "lopen": 0,
+    "runs": []
+  },
+  "vorige_week_km": 3.5,
+  "gem_km_4w": 1.9,
+  "weken_met_loop_8w": 3,
+  "reeks_weken": 2,
+  "doel_afstand_gehaald": false,
+  "doel_regelmaat_gehaald": false,
+  "tempo_trend_s": null,
+  "voorspelling": {
+    "basis": "snelste mijl laatste 12 weken: 7:52",
+    "5k": "26:10",
+    "10k": "54:33"
+  },
+  "advies": "Volgend weekend: 3,9 km rustig en zonder stoppen.",
+  "weken": [
+    {
+      "week_start": "2026-08-24",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-08-31",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-09-07",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-09-14",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-09-21",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-09-28",
+      "km": 3.59,
+      "lopen": 1
+    },
+    {
+      "week_start": "2026-10-05",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-10-12",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-10-19",
+      "km": 0.0,
+      "lopen": 0
+    },
+    {
+      "week_start": "2026-10-26",
+      "km": 4.12,
+      "lopen": 1
+    },
+    {
+      "week_start": "2026-11-02",
+      "km": 3.5,
+      "lopen": 1
+    },
+    {
+      "week_start": "2026-11-09",
+      "km": 0.0,
+      "lopen": 0
+    }
+  ],
+  "lopen": [
+    {
+      "id": "20445334499",
+      "datum": "2026-10-04",
+      "afstand_km": 3.59,
+      "beweegtijd": "18:36",
+      "tempo": "5:11",
+      "tempo_s": 311,
+      "tempo_incl_stops": "5:46",
+      "tempo_incl_s": 346,
+      "snelste_1k": "4:51"
+    },
+    {
+      "id": "20817075972",
+      "datum": "2026-11-01",
+      "afstand_km": 4.12,
+      "beweegtijd": "21:49",
+      "tempo": "5:18",
+      "tempo_s": 318,
+      "tempo_incl_stops": "6:24",
+      "tempo_incl_s": 384,
+      "snelste_1k": "4:50"
+    },
+    {
+      "id": "20894843762",
+      "datum": "2026-11-07",
+      "afstand_km": 3.5,
+      "beweegtijd": "17:54",
+      "tempo": "5:07",
+      "tempo_s": 307,
+      "tempo_incl_stops": "8:03",
+      "tempo_incl_s": 483,
+      "snelste_1k": "6:05"
+    }
+  ]
+}
