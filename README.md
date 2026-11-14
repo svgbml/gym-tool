@@ -44,7 +44,7 @@ python scripts/get_token.py <CLIENT_ID> <CLIENT_SECRET>
 Open de link en klik op **Authorize**. Je komt uit op een pagina die niet laadt (`localhost/exchange_token?...code=...`). Kopieer de code uit de adresbalk en plak die in het script. Het script toont daarna je refresh token.
 
 ### 3. ntfy-app
-Installeer ntfy (Android, iOS of https://ntfy.sh/app op je pc). Abonneer je op een topic met een lange naam die niemand kan raden, bijvoorbeeld `stijn-hardlopen-8k3f9x2q`. **Topicnamen zijn openbaar**: iedereen die de naam kent, kan je meldingen lezen.
+Installeer ntfy (Android, iOS of https://ntfy.sh/app op je pc). Abonneer je op een topic met een lange naam die niemand kan raden, bijvoorbeeld `hardlopen-<16 willekeurige tekens>`. **Topicnamen zijn openbaar**: iedereen die de naam kent, kan je meldingen lezen.
 
 ### 4. GitHub Secrets instellen
 Repo → Settings → Secrets and variables → Actions → **New repository secret**:
