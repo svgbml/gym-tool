@@ -19,6 +19,7 @@ GitHub Actions (zondag) ──► Strava API ──► scripts/weekrapport.py
 | Bestand | Wat |
 |---|---|
 | `.github/workflows/weekrapport.yml` | Planning (zondag) + handmatig starten |
+| `.github/workflows/pages.yml` | Webversie publiceren op GitHub Pages |
 | `scripts/weekrapport.py` | Strava ophalen, rapport berekenen, melding sturen |
 | `scripts/get_token.py` | Eenmalig: Strava-toegang regelen |
 | `docs/` | Webversie (GitHub Pages, installeerbaar als app) |
@@ -63,8 +64,8 @@ Optioneel, onder het tabblad **Variables**:
 | `DOEL_KM_WEEK` | `5` | weekdoel in km |
 | `PUBLISH_HEARTRATE` | leeg | `true` = hartslag ook in de openbare webversie (de melding toont hem altijd) |
 
-### 5. GitHub Pages aanzetten
-Repo → Settings → Pages → Source: **Deploy from a branch** → Branch `main`, map `/docs` → Save.
+### 5. GitHub Pages
+Repo → Settings → Pages → Source: **GitHub Actions**. De workflow `pages.yml` publiceert `docs/` bij elke wijziging en na elk weekrapport.
 
 ### 6. Testen
 Repo → Actions → **Hardloop-weekrapport** → **Run workflow**. Binnen een minuut krijg je de melding en wordt de webversie bijgewerkt.
