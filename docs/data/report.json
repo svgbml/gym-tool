@@ -1,7 +1,7 @@
 {
-  "gegenereerd": "2026-11-14T16:23+01:00",
+  "gegenereerd": "2026-11-14T17:09+01:00",
   "week_start": "2026-11-09",
-  "doel_km_week": 5,
+  "doel_km_week": 5.0,
   "deze_week": {
     "km": 0.0,
     "lopen": 0,
@@ -92,7 +92,7 @@
       "tempo_s": 311,
       "tempo_incl_stops": "5:46",
       "tempo_incl_s": 346,
-      "snelste_1k": "4:51"
+      "snelste_1k": null
     },
     {
       "id": "20817075972",
@@ -103,7 +103,7 @@
       "tempo_s": 318,
       "tempo_incl_stops": "6:24",
       "tempo_incl_s": 384,
-      "snelste_1k": "4:50"
+      "snelste_1k": null
     },
     {
       "id": "20894843762",
@@ -114,7 +114,7 @@
       "tempo_s": 307,
       "tempo_incl_stops": "8:03",
       "tempo_incl_s": 483,
-      "snelste_1k": "6:05"
+      "snelste_1k": null
     }
   ]
 }
